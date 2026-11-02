@@ -2,7 +2,6 @@
 - Predictions: 
 - - With the higher-priority thread starting delayed and the lower starting first with a semaphore, the higher-priority thread will wait on the semaphore while the medium-priority thread pre-empts the low-priority thread even as it holds the semaphore.
 
-<<<<<<< HEAD
 initial Results:
 
 "
@@ -15,7 +14,7 @@ Low priority task unable to acquire semaphore...
 - Reality: Low-priority task was unable to acquire the semaphore at all despite starting first. There is no sign that the medium or high-priority task were able to acquire it.
 
 # Activity 1
-- CHanging CreateBinary to CreateMutex results in the low-priority thread successfully obtaining the semaphore.
+- CHanging CreateBinary to CreateMutex results in the low-priority thread successfully obtaining the semaphore. The low priority task's "task complete" message was never printed; we suspect that it may have been immediately pre-empted when the semaphore it'd taken was released.
 
 Change taskYield in Supervisor while(1) to vTaskDelay and successsfully got this output:
 
@@ -34,9 +33,3 @@ Semaphore taken in high priority task. giving...
 Hight priority work done and sempahore released... 
 
 '''
-=======
-- Reality: Low-priority task was unable to acquire the semaphore at all despite starting first. There is no sign that the medium or high-priority task were able to acquire it.
-
-# Activity 1
-- CHanging CreateBinary to CreateMutex results in the low-priority thread successfully obtaining the semaphore.
->>>>>>> 60143242d6f834ee36582f5665ac5d26a1f6c610
