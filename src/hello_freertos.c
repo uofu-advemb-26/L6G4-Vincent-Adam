@@ -67,15 +67,20 @@ void sub_task_high(__unused void *params) {
 void supervisor_task(__unused void *params) {
     TaskHandle_t subtask_high, subtask_med, subtask_low;
 
+    printf("Starting low-priority thread\n");
     xTaskCreate(sub_task_low, "SubThreadLow",
                 SUB_TASK_STACK_SIZE, NULL, SUB_TASK_LOW_PRIORITY, &subtask_low);
     printf("Created low priority tatsk \n");
 
     vTaskDelay(500 / portTICK_PERIOD_MS); // increased delay from low to med to force low pri to take semaphore
 
+
+    printf("Starting med-priority thread\n");
     xTaskCreate(sub_task_med, "SubThreadMed",
                 SUB_TASK_STACK_SIZE, NULL, SUB_TASK_MED_PRIORITY, &subtask_med);
     printf("Created med priority tatsk \n");
+
+
     xTaskCreate(sub_task_high, "SubThreadHigh",
                 SUB_TASK_STACK_SIZE, NULL, SUB_TASK_HIGH_PRIORITY, &subtask_high);
     printf("Created high priority tatsk \n");
@@ -90,7 +95,8 @@ int main( void )
     stdio_init_all();
     hard_assert(cyw43_arch_init() == PICO_OK);
 
-    printf("\n\n");
+    sleep_ms(5000);
+    // vTaskDelay(1000);
     semaphore = xSemaphoreCreateMutex();
     if (!semaphore){
         printf("Error creating semaphore\n");
