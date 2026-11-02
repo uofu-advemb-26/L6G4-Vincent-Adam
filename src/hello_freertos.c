@@ -27,32 +27,40 @@ SemaphoreHandle_t semaphore;
 #define SUB_TASK_STACK_SIZE configMINIMAL_STACK_SIZE
 
 void sub_task_low(__unused void *params) {
-
-        if (xSemaphoreTake(semaphore, (TickType_t)100 ) == pdTRUE){
+        printf("Starting low prioiryt task... attempting to take semaphore\n");
+        if (xSemaphoreTake(semaphore, (TickType_t) 100 ) == pdTRUE){
             printf("Semaphore taken in low priority task. Delaying...\n");
-            vTaskDelay(500);
+            vTaskDelay(1000);
             xSemaphoreGive(semaphore);
+            printf("Low priroity work done\n");
         }
         else {
             printf("Low priority task unable to acquire semaphore...\n");
         }
 
-    while (true) {}
+    while (true) {
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
 }
 void sub_task_med(__unused void *params) {
     printf("med priority starving system attempt");
-    while (true) {}
+    while (1) {
+    }
 }
 void sub_task_high(__unused void *params) {
 
-    if (xSemaphoreTake(semaphore, (TickType_t)100 ) == pdTRUE){
-        printf("Semaphore taken in high priority task. Delaying...\n");
+    printf("High proiorty task attmepting to take sempahore...\n");
+    if (xSemaphoreTake(semaphore, (TickType_t)10000 ) == pdTRUE){
+        printf("Semaphore taken in high priority task. giving...\n");
         xSemaphoreGive(semaphore);
+        printf("Hight priority work done and sempahore released... \n");
     }
     else{
         printf("High priority task was unable to acquire semaphore...\n");
     }
-    while (true) {}
+    while (1) {
+        vTaskDelay(1 / portTICK_PERIOD_MS);
+    }
 
 }
 
@@ -61,8 +69,9 @@ void supervisor_task(__unused void *params) {
 
     xTaskCreate(sub_task_low, "SubThreadLow",
                 SUB_TASK_STACK_SIZE, NULL, SUB_TASK_LOW_PRIORITY, &subtask_low);
+    printf("Created low priority tatsk \n");
 
-    vTaskDelay(500); 
+    vTaskDelay(5000); // increased delay from low to med to force low pri to take semaphore
 
     xTaskCreate(sub_task_med, "SubThreadMed",
                 SUB_TASK_STACK_SIZE, NULL, SUB_TASK_MED_PRIORITY, &subtask_med);
@@ -80,8 +89,8 @@ int main( void )
     stdio_init_all();
     hard_assert(cyw43_arch_init() == PICO_OK);
 
-    
-    semaphore = xSemaphoreCreateBinary();
+    printf("\n\n");
+    semaphore = xSemaphoreCreateMutex();
     if (!semaphore){
         printf("Error creating semaphore\n");
         return 0;
@@ -94,6 +103,7 @@ int main( void )
 
     xTaskCreate(supervisor_task, "SupervisorThread",
                 SUPERVISOR_TASK_STACK_SIZE, NULL, SUPERVISOR_TASK_PRIORITY, &task);
+    printf("Starting scheduler\n");
     vTaskStartScheduler();
     return 0;
 }
