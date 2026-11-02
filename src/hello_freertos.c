@@ -30,7 +30,7 @@ void sub_task_low(__unused void *params) {
         printf("Starting low prioiryt task... attempting to take semaphore\n");
         if (xSemaphoreTake(semaphore, (TickType_t) 100 ) == pdTRUE){
             printf("Semaphore taken in low priority task. Delaying...\n");
-            vTaskDelay(1000);
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
             xSemaphoreGive(semaphore);
             printf("Low priroity work done\n");
         }
@@ -43,7 +43,7 @@ void sub_task_low(__unused void *params) {
     }
 }
 void sub_task_med(__unused void *params) {
-    printf("med priority starving system attempt");
+    printf("med priority starving system attempt\n");
     while (1) {
     }
 }
@@ -71,16 +71,17 @@ void supervisor_task(__unused void *params) {
                 SUB_TASK_STACK_SIZE, NULL, SUB_TASK_LOW_PRIORITY, &subtask_low);
     printf("Created low priority tatsk \n");
 
-    vTaskDelay(5000); // increased delay from low to med to force low pri to take semaphore
+    vTaskDelay(500 / portTICK_PERIOD_MS); // increased delay from low to med to force low pri to take semaphore
 
     xTaskCreate(sub_task_med, "SubThreadMed",
                 SUB_TASK_STACK_SIZE, NULL, SUB_TASK_MED_PRIORITY, &subtask_med);
-
+    printf("Created med priority tatsk \n");
     xTaskCreate(sub_task_high, "SubThreadHigh",
                 SUB_TASK_STACK_SIZE, NULL, SUB_TASK_HIGH_PRIORITY, &subtask_high);
+    printf("Created high priority tatsk \n");
 
     while(1){
-        taskYIELD();
+        vTaskDelay(100);
     }
 }
 
