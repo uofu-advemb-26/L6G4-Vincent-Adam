@@ -33,3 +33,7 @@ Semaphore taken in high priority task. giving...
 Hight priority work done and sempahore released... 
 
 '''
+
+# Activity 2
+- Both threads with the same priority running busy_busy:
+    - I expect that the run-time of the two threads should both be practically identical.
