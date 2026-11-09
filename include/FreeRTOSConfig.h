@@ -1,10 +1,6 @@
 #ifndef FREERTOS_CONFIG_H
 #define FREERTOS_CONFIG_H
 // This example uses a common include to avoid repetition
-#ifndef __ASSEMBLER__
-    #include <stdint.h>
-    extern uint64_t time_us_64(void);
-#endif
 #include "FreeRTOSConfig_examples_common.h"
 
 // #define configUSE_TRACE_FACILITY                1
