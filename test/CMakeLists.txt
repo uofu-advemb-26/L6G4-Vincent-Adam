@@ -1,5 +1,10 @@
 add_executable(mytest test.c unity_config.c)
 
+target_include_directories(mytest PRIVATE 
+    ${CMAKE_CURRENT_LIST_DIR}/include
+    ${CMAKE_CURRENT_LIST_DIR}/test
+)
+
 target_link_libraries(mytest PRIVATE
   pico_stdlib
   pico_async_context_freertos
