@@ -1,6 +1,7 @@
 #ifndef FREERTOS_CONFIG_H
 #define FREERTOS_CONFIG_H
 
+#include "FreeRTOSConfig_examples_common.h"
 #define configGENERATE_RUN_TIME_STATS             1
 #define configUSE_TRACE_FACILITY                  1
 #define configRUN_TIME_COUNTER_TYPE               uint64_t
@@ -8,6 +9,6 @@
 #define portGET_RUN_TIME_COUNTER_VALUE()          time_us_64()
 
 // This example uses a common include to avoid repetition
-#include "FreeRTOSConfig_examples_common.h"
+
 
 #endif

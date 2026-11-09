@@ -67,14 +67,14 @@ void test_runner(TaskFunction_t task1_func, TaskFunction_t task2_func, uint64_t 
     xTaskCreate(task2_func, "Task 2",
                 SUB_TASK_STACK_SIZE, NULL, task2_priority, &task2);
     
-    vTaskDelay(taskDelay_ms/portTICK_PERIOD_MS);
+    vTaskDelay(1000/portTICK_PERIOD_MS);    //dedicated time to let tasks run
 
     TaskStatus_t task1_stat, task2_stat;
     vTaskGetInfo(task1, &task1_stat, pdTRUE, eInvalid);
     vTaskGetInfo(task2, &task2_stat, pdTRUE, eInvalid);
 
-    *t1_time = task1_stat.ulRunTimeCounter;
-    *t2_time = task2_stat.ulRunTimeCounter;
+    *t1_time = ulTaskGetRunTimeCounter(task1);
+    *t2_time = ulTaskGetRunTimeCounter(task2);
 
     printf("Task 1 time: %llu\n", *t1_time);
     printf("Task 2 time: %llu\n", *t2_time);
@@ -85,11 +85,73 @@ void test_runner(TaskFunction_t task1_func, TaskFunction_t task2_func, uint64_t 
 
 void both_busy_busy(void) {
     uint64_t t1_time = 0, t2_time = 0;
-    test_runner(busy_busy, busy_busy, 0, SUB_TASK_LOW_PRIORITY, SUB_TASK_LOW_PRIORITY, 
+    test_runner(busy_busy, busy_busy, 10, SUB_TASK_LOW_PRIORITY, SUB_TASK_LOW_PRIORITY, 
         &t1_time, &t2_time);
 
     TEST_ASSERT(t1_time > 400000 && t1_time < 600000);
     TEST_ASSERT(t2_time > 400000 && t2_time < 600000);
+}
+
+void both_busy_yield(void) {
+    uint64_t t1_time = 0, t2_time = 0;
+    test_runner(busy_yield, busy_yield, 10, SUB_TASK_LOW_PRIORITY, SUB_TASK_LOW_PRIORITY, 
+        &t1_time, &t2_time);
+
+    TEST_ASSERT(t1_time > 400000 && t1_time < 600000);
+    TEST_ASSERT(t2_time > 400000 && t2_time < 600000);
+}
+
+void busy_yield_switch(void) {
+    uint64_t t1_time = 0, t2_time = 0;
+    test_runner(busy_busy, busy_yield, 10, SUB_TASK_LOW_PRIORITY, SUB_TASK_LOW_PRIORITY, 
+        &t1_time, &t2_time);
+
+    // TEST_ASSERT(t1_time > 400000 && t1_time < 600000);
+    // TEST_ASSERT(t2_time > 600000 && t2_time < 1000000);
+    TEST_ASSERT(t1_time > 500000);
+    TEST_ASSERT(t2_time < 5000);
+}
+
+void busy_busy_t1_higher(void) {
+    uint64_t t1_time = 0, t2_time = 0;
+    test_runner(busy_busy, busy_busy, 10, SUB_TASK_HIGH_PRIORITY, SUB_TASK_LOW_PRIORITY, 
+        &t1_time, &t2_time);
+
+    // TEST_ASSERT(t1_time < 600000);
+    // TEST_ASSERT(t2_time < 5000);
+    TEST_ASSERT(t1_time > 500000);
+    TEST_ASSERT(t2_time < 5000);
+}
+
+void busy_busy_t1_lower(void) {
+    uint64_t t1_time = 0, t2_time = 0;
+    // test_runner(busy_busy, busy_busy, 10, SUB_TASK_LOW_PRIORITY, SUB_TASK_HIGH_PRIORITY, 
+    //     &t1_time, &t2_time);
+    test_runner(busy_busy, busy_busy, 0, SUB_TASK_LOW_PRIORITY, SUB_TASK_HIGH_PRIORITY, 
+        &t1_time, &t2_time);
+
+    TEST_ASSERT(t1_time < 5000);
+    TEST_ASSERT(t2_time > 500000);    
+}
+
+void busy_yield_t1_higher(void) {
+    uint64_t t1_time = 0, t2_time = 0;
+
+    test_runner(busy_yield, busy_yield, 0, SUB_TASK_HIGH_PRIORITY, SUB_TASK_LOW_PRIORITY, 
+        &t1_time, &t2_time);
+
+    TEST_ASSERT(t1_time > 500000);
+    TEST_ASSERT(t2_time < 5000);
+}
+
+void busy_yield_t1_lower(void) {
+    uint64_t t1_time = 0, t2_time = 0;
+
+    test_runner(busy_yield, busy_yield, 0, SUB_TASK_LOW_PRIORITY, SUB_TASK_HIGH_PRIORITY, 
+        &t1_time, &t2_time);
+
+    TEST_ASSERT(t1_time < 5000);
+    TEST_ASSERT(t2_time > 500000);  
 }
 
 void test_supervisor(__unused void *params) {
@@ -98,6 +160,12 @@ void test_supervisor(__unused void *params) {
         printf("Start tests\n");
         UNITY_BEGIN();
         RUN_TEST(both_busy_busy);
+        RUN_TEST(both_busy_yield);
+        RUN_TEST(busy_yield_switch);
+        RUN_TEST(busy_busy_t1_higher);
+        RUN_TEST(busy_busy_t1_lower);
+        RUN_TEST(busy_yield_t1_higher);
+        RUN_TEST(busy_yield_t1_lower);
         // RUN_TEST(test_multiplication);
         sleep_ms(5000);
         UNITY_END();
